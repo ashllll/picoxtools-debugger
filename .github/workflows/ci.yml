@@ -29,7 +29,7 @@ jobs:
           python -m json.tool .mcp.json >/dev/null
       - name: Validate Reasonix config
         run: |
-          python -c 'import tomllib; tomllib.load(open("reasonix.toml", "rb"))'
+          python -c 'import sys; parser = __import__("tomllib" if sys.version_info >= (3, 11) else "tomli"); parser.load(open("reasonix.toml", "rb"))'
           python -m py_compile scripts/configure_reasonix.py
       - name: Compile MCP server
         run: python -m py_compile mcp/server.py
