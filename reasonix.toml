@@ -1,0 +1,26 @@
+# Project-local Reasonix configuration.
+# Global installation is available through scripts/configure_reasonix.py.
+
+[skills]
+paths = ["./skills"]
+
+[[plugins]]
+name = "picoxtools-debugger"
+type = "stdio"
+command = "python3"
+args = ["mcp/server.py"]
+call_timeout_seconds = 30
+trusted_read_only_tools = [
+  "safety_policy",
+  "inspect_host",
+  "inspect_serial_owners",
+  "check_web_assets",
+  "list_device_files",
+  "read_device_file",
+  "preview_init_config",
+  "quick_start",
+  "wiring_guide",
+  "uart_diagnostic",
+  "troubleshoot",
+  "search_docs",
+]

@@ -3,7 +3,7 @@
 [![CI](https://github.com/ashllll/picoxtools-debugger/actions/workflows/ci.yml/badge.svg)](https://github.com/ashllll/picoxtools-debugger/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-一个配套使用的 Codex 技能与本地 stdio MCP 服务，用于安全识别 PicoXtools、检查 USB/Web 状态、诊断串口占用，并验证 PicoXtools 与 XIAO ESP32-S3 的 UART 链路。
+一个同时支持 **Codex** 与 **Reasonix** 的 Agent Skill + 本地 stdio MCP 服务，用于安全识别 PicoXtools、检查 USB/Web 状态、诊断串口占用，并验证 PicoXtools 与 XIAO ESP32-S3 的 UART 链路。
 
 > [!IMPORTANT]
 > **PicoXtools 调试器自身的固件在任何条件下都不允许被修改。**
@@ -48,7 +48,7 @@ ESP32-S3 不支持 Arm SWD。GPIO4/GPIO5 这里只用于 UART 日志或数据，
 
 ## 环境要求
 
-- Codex Desktop/CLI 的插件功能
+- Codex Desktop/CLI，或 Reasonix 1.x CLI/Desktop
 - Python 3.10+
 - [PySerial](https://pyserial.readthedocs.io/) 3.5（仅 UART 采集和自环需要）
 - macOS、Linux 或 Windows；部分主机诊断能力按系统有所不同
@@ -98,17 +98,70 @@ codex plugin add picoxtools-debugger@personal
 Use $use-picoxtools-debugger to inspect my PicoXtools and capture the XIAO ESP32-S3 UART log.
 ```
 
+## 安装到 Reasonix
+
+[Reasonix 1.x](https://reasonix.cn/guide/) 原生支持 Claude/Agent Skills 格式的 `SKILL.md`、项目根 `.mcp.json`，以及 `reasonix.toml` 中的 `[skills].paths` 和 `[[plugins]]`。本仓库同时提供项目级配置和安全的全局安装脚本。
+
+先克隆仓库并安装 PySerial：
+
+```bash
+git clone https://github.com/ashllll/picoxtools-debugger.git
+cd picoxtools-debugger
+python3 -m pip install -r mcp/requirements.txt
+```
+
+直接在仓库目录启动 Reasonix 时，根目录 [`reasonix.toml`](reasonix.toml) 会注册技能与 MCP。若希望在其他项目中全局使用，先预览配置变更：
+
+```bash
+python3 scripts/configure_reasonix.py
+```
+
+确认路径后应用；脚本会先备份现有配置、保留其他技能/MCP，并进行 TOML 解析验证：
+
+```bash
+python3 scripts/configure_reasonix.py --apply
+```
+
+如果电脑同时存在新旧两个 Reasonix 配置文件，脚本会拒绝猜测，需明确指定实际使用的文件，例如：
+
+```bash
+python3 scripts/configure_reasonix.py \
+  --config ~/.reasonix/config.toml \
+  --apply
+```
+
+如需固定 MCP 使用的 Python（该环境必须装有 PySerial），可增加 `--python /absolute/path/to/python3`。
+
+验证配置：
+
+```bash
+python3 scripts/configure_reasonix.py \
+  --config ~/.reasonix/config.toml \
+  --check
+```
+
+重启 Reasonix 后：
+
+1. 用 `/skills` 确认 `use-picoxtools-debugger` 已发现；
+2. 用 `/mcp` 确认 `picoxtools-debugger` 已连接；
+3. 请求使用 `use-picoxtools-debugger` 检查 PicoXtools 或采集 UART。
+
+Reasonix 的 `trusted_read_only_tools` 只包含 MCP 明确标为只读的 12 个工具。`capture_uart` 和 `uart_loopback_test` 不会被错误加入只读信任列表。
+
 ## 项目结构
 
 ```text
 .codex-plugin/plugin.json                   插件清单
 .mcp.json                                   stdio MCP 配置
+reasonix.toml                               Reasonix 项目级技能/MCP 配置
+scripts/configure_reasonix.py               Reasonix 全局配置安装器
 mcp/server.py                               MCP 服务
 mcp/requirements.txt                        UART 依赖
 knowledge/picoxtools.json                   带来源和适用范围的知识库
 skills/use-picoxtools-debugger/SKILL.md     技能工作流与安全规则
 skills/.../references/                      官方资料审计与来源索引
 tests/test_server.py                        单元、协议与安全回归测试
+tests/test_reasonix.py                      Reasonix 配置与信任边界测试
 ```
 
 ## 验证
@@ -120,6 +173,8 @@ python3 -m unittest discover -s tests -v
 python3 -m json.tool knowledge/picoxtools.json >/dev/null
 python3 -m json.tool .codex-plugin/plugin.json >/dev/null
 python3 -m json.tool .mcp.json >/dev/null
+python3 -c 'import tomllib; tomllib.load(open("reasonix.toml", "rb"))'
+python3 scripts/configure_reasonix.py --check --config /path/to/reasonix/config.toml
 ```
 
 如果本机存在 Codex 系统技能，也可以运行完整插件校验：
@@ -141,6 +196,7 @@ python3 ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py .
 - PicoXtools 官方页面混有 RP2040/RP2350、LCD/无屏、Mini 与不同固件时期的内容。本项目不会在缺乏设备证据时把这些变体视为等同。
 - PPVision 公开 UART 源码停留在较早的 RP2040 实现，因此 GPIO 方向和 DTR/RTS 行为会结合现场证据使用，不会冒充所有 RP2350 固件的无条件规范。
 - MCP 不运行 xShell、不终止进程、不写 PicoXtools 文件、不烧 eFuse、不烧录目标，也绝不修改 PicoXtools 固件。
+- Reasonix 会把声明了 MCP `readOnlyHint: true` 的工具作为只读工具；项目配置又以 `trusted_read_only_tools` 明确收敛 Plan/只读研究阶段可用的工具。串口采集和自环仍属于需要正常权限判断的本地 I/O。
 - 完整官方资料审计见 [`official-docs-audit.md`](skills/use-picoxtools-debugger/references/official-docs-audit.md)。
 
 ## 贡献
@@ -153,4 +209,4 @@ python3 ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py .
 
 ---
 
-English summary: this repository provides a Codex skill and local stdio MCP server for safe PicoXtools discovery and UART diagnostics. PicoXtools firmware is immutable by project policy. See the feature table and installation commands above.
+English summary: this repository provides a portable Agent Skill and local stdio MCP server for Codex and Reasonix. PicoXtools firmware is immutable by project policy. Reasonix support includes a project `reasonix.toml`, a backup-first global config installer, and exact read-only tool trust tests.

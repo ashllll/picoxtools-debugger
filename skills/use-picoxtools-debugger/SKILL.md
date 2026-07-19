@@ -1,11 +1,13 @@
 ---
 name: use-picoxtools-debugger
-description: Use the bundled PicoXtools MCP to safely identify, connect, and troubleshoot a user-declared PicoXtools 2 screenless debugger, especially UART/TTL with XIAO ESP32-S3. Trigger for PicoXtools/PicoXTools, 192.168.33.1, xShell, CDC-UART, GPIO4/GPIO5, UART loopback, DAP-Link, SWD, I2C, SPI, USB RNDIS/CDC-ECM, or device/Web-console detection problems.
+description: Use the bundled PicoXtools MCP from Codex or Reasonix to safely identify, connect, and troubleshoot a user-declared PicoXtools 2 screenless debugger, especially UART/TTL with XIAO ESP32-S3. Trigger for PicoXtools/PicoXTools, 192.168.33.1, xShell, CDC-UART, GPIO4/GPIO5, UART loopback, DAP-Link, SWD, I2C, SPI, USB RNDIS/CDC-ECM, or device/Web-console detection problems.
 ---
 
 # Use PicoXtools Debugger
 
 Use the `picoxtools-debugger` MCP as the primary inspection and diagnostic layer. Adapt LCD-dependent official instructions to the user's screenless device using host-side USB, serial, volume, network, and Web evidence.
+
+This skill is portable Agent Skills content. In Codex use the bundled plugin MCP. In Reasonix, load the repository `reasonix.toml` or the global configuration produced by `scripts/configure_reasonix.py`; MCP tools appear with the `mcp__picoxtools-debugger__` namespace. Do not weaken tool annotations or Reasonix `trusted_read_only_tools`: `capture_uart` and `uart_loopback_test` are intentionally not read-only.
 
 ## Non-negotiable firmware rule
 
