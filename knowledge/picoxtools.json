@@ -1,0 +1,131 @@
+{
+  "metadata": {
+    "verified_at": "2026-07-19",
+    "scope": "PicoXtools official documentation, PPVision public source, Espressif documentation, Seeed XIAO ESP32-S3 documentation, and local hardware observations",
+    "source_limit": "PPVision public UART source is pinned to a 2023 RP2040-era commit and must not be presented as a universal RP2350 firmware guarantee."
+  },
+  "aliases": {
+    "串口": "uart cdc ttl gpio4 gpio5",
+    "没打印": "uart capture dtr rts web priority ownership",
+    "占用": "serial owner lsof web uart priority",
+    "无屏": "screenless variant lcd host evidence",
+    "固件": "firmware immutable version uf2",
+    "烧录": "target flash firmware swd jtag",
+    "esp32-s3": "xiao gpio43 gpio44 uart jtag no swd"
+  },
+  "entries": [
+    {
+      "topic": "user policy: PicoXtools firmware is immutable",
+      "text": "PicoXtools debugger firmware must never be upgraded, reflashed, replaced, patched, erased, downgraded, recovered, or changed through UF2. Read-only identity/version inspection is allowed. This does not prohibit explicitly authorized flashing of a separate target MCU such as XIAO ESP32-S3.",
+      "source": "user clarification in this task",
+      "evidence": "user-policy",
+      "applies_to": "this plugin and every PicoXtools firmware version"
+    },
+    {
+      "topic": "overview and variant limits",
+      "text": "PicoXtools exposes Web, xShell, CDC serial, mass storage, USB networking, and debug functions, but official pages mix RP2040, RP2350, LCD, Mini, and other variants. Screenless, Mini, second-generation, and RP2350 must not be inferred to be equivalent without device evidence.",
+      "source": "https://www.cnsee.net/guide/getting-started.html",
+      "evidence": "official-documentation",
+      "applies_to": "variant identification"
+    },
+    {
+      "topic": "electrical safety",
+      "text": "PicoXtools signal interfaces are 3.3 V only. Direct connection to 5 V logic may damage equipment. Connect common GND first and do not connect PicoXtools 3V3 when a target is independently USB powered.",
+      "source": "https://www.cnsee.net/guide/getting-started.html",
+      "evidence": "official-documentation",
+      "applies_to": "all GPIO interfaces"
+    },
+    {
+      "topic": "USB identity and composite interfaces",
+      "text": "Official examples use VID:PID 2e8a:000c, product PicoXTools/PPVision, a CDC-ACM port, USB network, and PICOXTOOLS mass-storage volume. A generic usbmodem or ttyACM name alone is not enough to identify PicoXtools.",
+      "source": "https://www.cnsee.net/guide/bootup.html",
+      "evidence": "official-documentation",
+      "applies_to": "host discovery"
+    },
+    {
+      "topic": "host network modes",
+      "text": "Windows uses RNDIS, macOS uses CDC-ECM, and Linux supports both according to the official boot page. Default configuration is RNDIS. The macOS .init example contains host=mac and ip=192.168.33.1. linux-i2c=1 disables DAP-Link.",
+      "source": "https://www.cnsee.net/guide/bootup.html",
+      "evidence": "official-documentation",
+      "applies_to": "documented USB network behavior"
+    },
+    {
+      "topic": "Web console integrity",
+      "text": "The Web console is normally opened at http://192.168.33.1. A successful root HTML request does not prove its referenced JavaScript and CSS assets are present; check same-origin assets independently when the UI is stale or broken.",
+      "source": "https://www.cnsee.net/guide/getting-started.html",
+      "evidence": "official-entrypoint plus local diagnostic principle",
+      "applies_to": "Web console"
+    },
+    {
+      "topic": "UART interface and Web priority",
+      "text": "The official UART assistant uses UART1 on GPIO4/GPIO5 and exposes the same UART through WebSocket and USB CDC. Web UART has priority, so explicitly close the Web serial session before using a third-party CDC serial tool.",
+      "source": "https://www.cnsee.net/guide/webconsole/uart_assistant.html",
+      "evidence": "official-documentation",
+      "applies_to": "RP2040/RP2350 UART assistant as documented"
+    },
+    {
+      "topic": "UART pin direction",
+      "text": "PPVision public source defines PICOPROBE_UART_TX as GPIO4 and PICOPROBE_UART_RX as GPIO5, using uart1 at default 115200. The public commit is RP2040-era, so verify newer hardware with loopback and observed traffic.",
+      "source": "https://github.com/ppvision/PicoXTools/blob/7d5e96437b8977d7aa6f04ec3d73c09997312ec0/apps/picprobe/include/board_pico_config.h#L42-L49",
+      "evidence": "official-public-source",
+      "applies_to": "public source design; field verification required for newer firmware"
+    },
+    {
+      "topic": "CDC DTR RTS behavior",
+      "text": "The public CDC implementation pauses UART polling when DTR and RTS are both false, resumes when either is true, and applies host line-coding baud. This is source-backed diagnostic guidance, not an unconditional guarantee for newer unpublished RP2350 firmware.",
+      "source": "https://github.com/ppvision/PicoXTools/blob/7d5e96437b8977d7aa6f04ec3d73c09997312ec0/apps/picprobe/src/cdc_uart.c#L132-L169",
+      "evidence": "official-public-source",
+      "applies_to": "public RP2040-era implementation"
+    },
+    {
+      "topic": "xShell boundary",
+      "text": "Web xShell uses WebSocket and is distinct from CDC-UART. xShell includes state-changing commands such as rm, mv, format, flash, reboot, cc, and JS. The plugin must not auto-run xShell commands.",
+      "source": "https://www.cnsee.net/guide/xshell.html",
+      "evidence": "official-documentation",
+      "applies_to": "xShell"
+    },
+    {
+      "topic": "XIAO ESP32-S3 UART wiring",
+      "text": "Seeed documents XIAO ESP32-S3 D6/GPIO43 as TX and D7/GPIO44 as RX. For one-way logging connect XIAO D6/TX to Pico GPIO5/RX plus common GND; add Pico GPIO4/TX to XIAO D7/RX only after one-way receive passes.",
+      "source": "https://wiki.seeedstudio.com/xiao_esp32s3_pin_multiplexing/",
+      "evidence": "official-board-documentation plus local acceptance",
+      "applies_to": "Seeed XIAO ESP32-S3"
+    },
+    {
+      "topic": "ESP32-S3 SWD and JTAG",
+      "text": "ESP32-S3 does not use Arm SWD. PicoXtools DAPLink documentation currently says SWD only, so it cannot provide ESP32-S3 hardware debugging through SWD. Prefer XIAO native USB Serial/JTAG for breakpoints; external JTAG is a separate four-wire workflow with possible irreversible eFuse implications.",
+      "source": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-guides/jtag-debugging/configure-builtin-jtag.html",
+      "evidence": "official-Espressif and PicoXtools documentation",
+      "applies_to": "ESP32-S3"
+    },
+    {
+      "topic": "DAP and known issues",
+      "text": "PicoXtools documents CMSIS-DAP 2.1+ and recommends Keil 5.36+ when older Keil lacks the needed transport. Windows 7 USB is a known problem. Enabling I2C-Tiny-USB on Windows may cause enumeration failure.",
+      "source": "https://www.cnsee.net/guide/known_issues.html",
+      "evidence": "official-documentation",
+      "applies_to": "documented host/debug compatibility"
+    }
+  ],
+  "wiring": {
+    "uart": {
+      "pins": ["Pico GPIO4 / UART1 TX", "Pico GPIO5 / UART1 RX", "GND"],
+      "notes": ["Connect Pico TX to target RX and target TX to Pico RX.", "Start with target TX -> Pico GPIO5 plus GND only.", "Web UART and USB CDC share the interface; explicitly close Web UART before CDC."]
+    },
+    "i2c": {
+      "pins": ["GPIO4 / I2C0_SDA", "GPIO5 / I2C0_SCL", "GND"],
+      "notes": ["SDA connects to SDA and SCL to SCL.", "Pull-ups must be to 3.3 V, never 5 V.", "GPIO4/GPIO5 are multiplexed with UART; do not run both modes concurrently."]
+    },
+    "spi": {
+      "pins": ["GPIO8", "GPIO9", "GPIO10", "GPIO11", "GND"],
+      "notes": ["The text documentation does not establish a complete SCK/MOSI/MISO/CS mapping.", "Verify the exact variant pinout/silkscreen before connecting."]
+    },
+    "swd": {
+      "pins": ["SWDIO", "SWCLK", "GND"],
+      "notes": ["Connect like-named signals and common GND.", "ESP32-S3 does not support SWD.", "Power the target from its intended supply."]
+    },
+    "jtag": {
+      "pins": ["TCK", "TMS", "TDI", "TDO", "GND"],
+      "notes": ["No verified PicoXtools connector mapping is bundled; do not infer one.", "PicoXtools DAPLink is documented as SWD-only and must not be claimed as an ESP32-S3 JTAG probe.", "Prefer XIAO native USB Serial/JTAG for ESP32-S3."]
+    }
+  }
+}

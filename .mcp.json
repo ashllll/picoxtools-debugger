@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "picoxtools-debugger": {
+      "title": "PicoXtools 2 Debugger",
+      "description": "Safely inspect PicoXtools and validate UART without modifying PicoXtools firmware.",
+      "command": "python3",
+      "args": ["./mcp/server.py"],
+      "cwd": ".",
+      "tool_timeout_sec": 30
+    }
+  }
+}

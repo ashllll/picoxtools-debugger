@@ -1,0 +1,12 @@
+interface:
+  display_name: "PicoXtools 2 调试助手"
+  short_description: "安全检测 PicoXtools 并诊断 XIAO 串口链路"
+  default_prompt: "Use $use-picoxtools-debugger to safely inspect my PicoXtools and diagnose its XIAO ESP32-S3 UART link without modifying Pico firmware."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "picoxtools-debugger"
+      description: "Verified PicoXtools discovery, documentation, wiring, Web integrity, serial ownership, capture, and guarded loopback tools"
+      transport: "stdio"
+policy:
+  allow_implicit_invocation: true
