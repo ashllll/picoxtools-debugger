@@ -4,6 +4,7 @@ import importlib.util
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 try:
     import tomllib
@@ -54,8 +55,9 @@ class ReasonixInstallerTests(unittest.TestCase):
             modern.parent.mkdir(parents=True)
             legacy.write_text("config_version = 3\n", encoding="utf-8")
             modern.write_text("config_version = 3\n", encoding="utf-8")
-            with self.assertRaisesRegex(ValueError, "multiple Reasonix configs"):
-                installer.resolve_config_path(None, home)
+            with mock.patch.object(installer.platform, "system", return_value="Darwin"):
+                with self.assertRaisesRegex(ValueError, "multiple Reasonix configs"):
+                    installer.resolve_config_path(None, home)
 
     def test_merge_preserves_unrelated_config_and_is_idempotent(self) -> None:
         original = """default_model = \"example\"
